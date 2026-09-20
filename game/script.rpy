@@ -35,3 +35,5 @@ label start:
     mc "Ya, kenapa? Iri karena tidak bisa melakukannya? Aku punya uang—"
 
     return
+
+#XYZ------hehe.
