@@ -26,7 +26,7 @@ label start:
 
     show mc smirk
 
-    mc "Ck."
+    mc "Ck. JENNI NGETEST PUSH"
 
     show tziyon bingung
 
