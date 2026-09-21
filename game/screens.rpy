@@ -99,6 +99,11 @@ screen say(who, what):
 
     window:
         id "window"
+        ysize gui.textbox_height # Memaksa tinggi window mengikuti gui.rpy
+        
+        # Jika gambar bawaan textbox.png pecah saat ditarik, 
+        # kamu bisa pakai Solid background ini agar tampilan tetap bersih & rapi:
+        background Frame(Solid("#101820b2"), 0, 0)
 
         if who is not None:
 
@@ -208,6 +213,10 @@ screen choice(items):
     style_prefix "choice"
 
     vbox:
+        xalign 0.5
+        yalign gui.choice_vbox_yalign
+        spacing gui.choice_spacing
+
         for i in items:
             textbutton i.caption action i.action
 
@@ -292,7 +301,7 @@ screen navigation():
     vbox:
         style_prefix "navigation"
 
-        xpos gui.navigation_xpos
+        xalign 0.5
         yalign 0.5
 
         spacing gui.navigation_spacing
@@ -1535,6 +1544,17 @@ screen quick_menu():
             textbutton _("Auto") action Preference("auto-forward", "toggle")
             textbutton _("Menu") action ShowMenu()
 
+screen main_menu_shortcut_button():
+    # Menampilkan tombol di pojok kanan atas (xalign 0.95, yalign 0.02)
+    frame:
+        background None # Menghilangkan background kotak standar
+        xalign 0.95
+        yalign 0.02
+
+        textbutton _("Main Menu") action MainMenu():
+            text_size 28
+            text_idle_color "#ffffff"
+            text_hover_color "#c1e0ff"
 
 style window:
     variant "small"

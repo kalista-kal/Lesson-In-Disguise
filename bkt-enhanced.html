@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BKT + ACT-R Hybrid Solver (Scaffolding & History)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Space+Mono:wght@700&display=swap');
+
+        :root {
+            --pm-red: #ff4747;
+            --pm-blue: #3498db;
+            --pm-bg: #f5f6f8;
+            --pm-card: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #95a5a6;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--pm-bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--pm-card);
+            min-height: 95vh;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--pm-bg);
+            font-weight: 600;
+            color: var(--pm-red);
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .scanner-area {
+            padding: 25px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, #ffffff 0%, #fff9f9 100%);
+            border-bottom: 1px dashed #ffd1d1;
+        }
+
+        .equation-display {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.6rem;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .kc-tags {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+        }
+
+        .kc-badge {
+            background: #f1f2f6;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: 1px solid #e0e6ed;
+        }
+
+        .step-indicator {
+            font-size: 0.85rem;
+            color: var(--pm-blue);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-area {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #fafbfc;
+        }
+
+        /* ----- STYLING HISTORY BARU ----- */
+        .history-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            color: #7f8c8d;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #e0e6ed;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .history-container.active {
+            display: flex;
+        }
+
+        .history-item {
+            background: #f8f9fa;
+            padding: 5px 15px;
+            border-radius: 8px;
+            border: 1px solid #dcdde1;
+            text-align: center;
+            width: 80%;
+        }
+
+        .history-arrow {
+            color: #bdc3c7;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        /* -------------------------------- */
+
+        .mcq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mcq-btn {
+            background-color: white;
+            color: var(--text-main);
+            border: 2px solid #e0e6ed;
+            padding: 15px 10px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .mcq-btn:hover {
+            border-color: var(--pm-blue);
+            background-color: #f0f8ff;
+        }
+
+        .mcq-btn:active {
+            transform: scale(0.98);
+        }
+
+        .mcq-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .mcq-btn.correct-choice {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #2ecc71;
+        }
+
+        .mcq-btn.wrong-choice {
+            background-color: var(--pm-red);
+            color: white;
+            border-color: var(--pm-red);
+        }
+
+        .feedback {
+            text-align: center;
+            font-weight: 600;
+            min-height: 24px;
+            margin-top: 5px;
+            font-size: 0.95rem;
+        }
+
+        .correct {
+            color: #2ecc71;
+        }
+
+        .incorrect {
+            color: var(--pm-red);
+        }
+
+        .mastery-dashboard {
+            padding: 20px;
+            background-color: #ffffff;
+            border-top: 2px solid var(--pm-bg);
+            flex-grow: 1;
+        }
+
+        .mastery-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .kc-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+        }
+
+        .kc-name {
+            width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+        }
+
+        .kc-metrics {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 0 10px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #e0e6ed;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.5s ease-in-out, background-color 0.5s;
+        }
+
+        .fluency-track {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 0.8rem;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        .gear-active {
+            color: #f39c12;
+            text-shadow: 0 0 2px rgba(243, 156, 18, 0.4);
+        }
+
+        .gear-inactive {
+            opacity: 0.25;
+            filter: grayscale(100%);
+        }
+
+        .fluency-text {
+            margin-left: 5px;
+            font-weight: 600;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .pl-text {
+            margin-left: auto;
+            color: #bdc3c7;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .kc-status {
+            width: 45px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <div class="header">BKT + ACT-R Hybrid Solver</div>
+
+        <div class="scanner-area">
+            <div class="step-indicator" id="stepIndicator">Memuat Soal...</div>
+            <div class="equation-display" id="equationText"></div>
+            <div class="kc-tags" id="kcTags"></div>
+        </div>
+
+        <div class="input-area">
+            <!-- RIWAYAT LANGKAH PENYELESAIAN (BARU) -->
+            <div id="historyContainer" class="history-container"></div>
+
+            <div class="mcq-grid" id="mcqContainer">
+                <!-- Pilihan Ganda -->
+            </div>
+            <div class="feedback" id="feedbackText"></div>
+        </div>
+
+        <div class="mastery-dashboard">
+            <div class="mastery-title">
+                <span>Knowledge & Fluency Tracker</span>
+                <span>(Req: 85% & All ⚙️)</span>
+            </div>
+            <div id="masteryList"></div>
+        </div>
+    </div>
+
+    <script>
+        const kcOrder = ["KC-01", "KC-02", "KC-03", "KC-04", "KC-05", "KC-06"];
+        const MASTERY_THRESHOLD = 0.85;
+
+        const kcs = {
+            "KC-01": { name: "Term & Sign Mgt.", pL: 0.10, pT: 0.15, pS: 0.10, pG: 0.30, fluency: 0, target: 3, mastered: false },
+            "KC-02": { name: "Coeff. Clearance", pL: 0.10, pT: 0.15, pS: 0.10, pG: 0.30, fluency: 0, target: 3, mastered: false },
+            "KC-03": { name: "Collect Like Terms", pL: 0.10, pT: 0.10, pS: 0.15, pG: 0.15, fluency: 0, target: 3, mastered: false },
+            "KC-04": { name: "Distributive Prop.", pL: 0.05, pT: 0.08, pS: 0.20, pG: 0.10, fluency: 0, target: 3, mastered: false },
+            "KC-05": { name: "Var. Substitution", pL: 0.05, pT: 0.05, pS: 0.25, pG: 0.05, fluency: 0, target: 4, mastered: false },
+            "KC-06": { name: "Eq. Elimination", pL: 0.05, pT: 0.05, pS: 0.25, pG: 0.05, fluency: 0, target: 4, mastered: false }
+        };
+
+        const questionBank = [
+            // LEVEL 1
+            { id: 101, steps: [{ state: "x + 5 = 12", kcs: ["KC-01"], options: ["x = 7", "x = 17", "x = -7", "x = 60"], correct: 0 }] },
+            { id: 102, steps: [{ state: "x - 4 = -10", kcs: ["KC-01"], options: ["x = -6", "x = -14", "x = 6", "x = 14"], correct: 0 }] },
+            { id: 103, steps: [{ state: "8 + x = 3", kcs: ["KC-01"], options: ["x = -5", "x = 5", "x = 11", "x = 24"], correct: 0 }] },
+            { id: 104, steps: [{ state: "6x = 24", kcs: ["KC-02"], options: ["x = 4", "x = 18", "x = 30", "x = 144"], correct: 0 }] },
+            { id: 105, steps: [{ state: "x / 3 = 7", kcs: ["KC-02"], options: ["x = 21", "x = 10", "x = 4", "x = 2.33"], correct: 0 }] },
+            { id: 106, steps: [{ state: "-2x = 10", kcs: ["KC-02"], options: ["x = -5", "x = 5", "x = -20", "x = 12"], correct: 0 }] },
+            {
+                id: 107, steps: [
+                    { state: "3x + 1 = 10", kcs: ["KC-01"], options: ["3x = 9", "3x = 11", "4x = 10", "3x = -9"], correct: 0 },
+                    { state: "3x = 9", kcs: ["KC-02"], options: ["x = 3", "x = 6", "x = 12", "x = 27"], correct: 0 }
+                ]
+            },
+
+            // LEVEL 2
+            {
+                id: 201, steps: [
+                    { state: "4x + 3x = 21", kcs: ["KC-03"], options: ["7x = 21", "x = 21", "12x = 21", "7x² = 21"], correct: 0 },
+                    { state: "7x = 21", kcs: ["KC-02"], options: ["x = 3", "x = 14", "x = 28", "x = 147"], correct: 0 }
+                ]
+            },
+            {
+                id: 202, steps: [
+                    { state: "8x - 2x = 36", kcs: ["KC-03"], options: ["6x = 36", "10x = 36", "4x = 36", "-6x = 36"], correct: 0 },
+                    { state: "6x = 36", kcs: ["KC-02"], options: ["x = 6", "x = 30", "x = 42", "x = 216"], correct: 0 }
+                ]
+            },
+            {
+                id: 203, steps: [
+                    { state: "x + 5x - 4 = 14", kcs: ["KC-03"], options: ["6x - 4 = 14", "5x - 4 = 14", "4x - 4 = 14", "6x = 10"], correct: 0 },
+                    { state: "6x - 4 = 14", kcs: ["KC-01"], options: ["6x = 18", "6x = 10", "10x = 14", "6x = -18"], correct: 0 },
+                    { state: "6x = 18", kcs: ["KC-02"], options: ["x = 3", "x = 12", "x = 24", "x = 108"], correct: 0 }
+                ]
+            },
+            {
+                id: 204, steps: [
+                    { state: "2(x + 4) = 18", kcs: ["KC-04"], options: ["2x + 8 = 18", "2x + 4 = 18", "x + 8 = 18", "2x - 8 = 18"], correct: 0 },
+                    { state: "2x + 8 = 18", kcs: ["KC-01"], options: ["2x = 10", "2x = 26", "10x = 18", "2x = -10"], correct: 0 },
+                    { state: "2x = 10", kcs: ["KC-02"], options: ["x = 5", "x = 8", "x = 12", "x = 20"], correct: 0 }
+                ]
+            },
+            {
+                id: 205, steps: [
+                    { state: "4(2x - 1) = 12", kcs: ["KC-04"], options: ["8x - 4 = 12", "8x - 1 = 12", "6x - 4 = 12", "8x + 4 = 12"], correct: 0 },
+                    { state: "8x - 4 = 12", kcs: ["KC-01"], options: ["8x = 16", "8x = 8", "4x = 12", "8x = -16"], correct: 0 },
+                    { state: "8x = 16", kcs: ["KC-02"], options: ["x = 2", "x = 8", "x = 24", "x = 128"], correct: 0 }
+                ]
+            },
+            {
+                id: 206, steps: [
+                    { state: "-3(x - 2) = 15", kcs: ["KC-04"], options: ["-3x + 6 = 15", "-3x - 6 = 15", "-3x - 2 = 15", "3x + 6 = 15"], correct: 0 },
+                    { state: "-3x + 6 = 15", kcs: ["KC-01"], options: ["-3x = 9", "-3x = 21", "3x = 15", "-3x = -9"], correct: 0 },
+                    { state: "-3x = 9", kcs: ["KC-02"], options: ["x = -3", "x = 3", "x = -12", "x = -27"], correct: 0 }
+                ]
+            },
+
+            // LEVEL 3
+            {
+                id: 301, steps: [
+                    { state: "y = 2x<br>x + y = 9", kcs: ["KC-05"], options: ["x + 2x = 9", "2x + y = 9", "x + 2 = 9", "x + y = 2x"], correct: 0 },
+                    { state: "x + 2x = 9", kcs: ["KC-03"], options: ["3x = 9", "2x² = 9", "x = 9", "4x = 9"], correct: 0 },
+                    { state: "3x = 9", kcs: ["KC-02"], options: ["x = 3", "x = 6", "x = 12", "x = 27"], correct: 0 }
+                ]
+            },
+            {
+                id: 302, steps: [
+                    { state: "x = y + 3<br>2x + y = 15", kcs: ["KC-05"], options: ["2(y + 3) + y = 15", "2y + 3 + y = 15", "x + 2x = 15", "2(y) + 3 = 15"], correct: 0 },
+                    { state: "2(y + 3) + y = 15", kcs: ["KC-04"], options: ["2y + 6 + y = 15", "2y + 3 + y = 15", "4y + y = 15", "2y - 6 + y = 15"], correct: 0 },
+                    { state: "2y + 6 + y = 15", kcs: ["KC-03"], options: ["3y + 6 = 15", "2y + 6y = 15", "8y = 15", "y + 6 = 15"], correct: 0 },
+                    { state: "3y + 6 = 15", kcs: ["KC-01"], options: ["3y = 9", "3y = 21", "9y = 15", "3y = -9"], correct: 0 },
+                    { state: "3y = 9", kcs: ["KC-02"], options: ["y = 3", "y = 6", "y = 12", "y = 27"], correct: 0 }
+                ]
+            },
+            {
+                id: 303, steps: [
+                    { state: "y = x - 2<br>3x - y = 10", kcs: ["KC-05"], options: ["3x - (x - 2) = 10", "3x - x - 2 = 10", "3(x - 2) - y = 10", "3x - y - 2 = 10"], correct: 0 },
+                    { state: "3x - (x - 2) = 10", kcs: ["KC-04"], options: ["3x - x + 2 = 10", "3x - x - 2 = 10", "2x - 2 = 10", "3x + x + 2 = 10"], correct: 0 },
+                    { state: "3x - x + 2 = 10", kcs: ["KC-03"], options: ["2x + 2 = 10", "4x + 2 = 10", "3x + 2 = 10", "2x = 12"], correct: 0 },
+                    { state: "2x + 2 = 10", kcs: ["KC-01"], options: ["2x = 8", "2x = 12", "4x = 10", "2x = -8"], correct: 0 },
+                    { state: "2x = 8", kcs: ["KC-02"], options: ["x = 4", "x = 6", "x = 10", "x = 16"], correct: 0 }
+                ]
+            },
+            {
+                id: 304, steps: [
+                    { state: "x + y = 10<br>x - y = 2<br>(Jumlahkan Kedua Pers.)", kcs: ["KC-06"], options: ["2x = 12", "2y = 12", "2x = 8", "x = 12"], correct: 0 },
+                    { state: "2x = 12", kcs: ["KC-02"], options: ["x = 6", "x = 10", "x = 14", "x = 24"], correct: 0 },
+                    { state: "Jika x = 6,<br>x + y = 10", kcs: ["KC-05"], options: ["6 + y = 10", "y - 6 = 10", "6 - y = 10", "10 + y = 6"], correct: 0 },
+                    { state: "6 + y = 10", kcs: ["KC-01"], options: ["y = 4", "y = 16", "y = -4", "y = 60"], correct: 0 }
+                ]
+            },
+            {
+                id: 305, steps: [
+                    { state: "2x + y = 11<br>2x - y = 5<br>(Jumlahkan Kedua Pers.)", kcs: ["KC-06"], options: ["4x = 16", "4x = 6", "2y = 16", "x = 16"], correct: 0 },
+                    { state: "4x = 16", kcs: ["KC-02"], options: ["x = 4", "x = 12", "x = 20", "x = 64"], correct: 0 },
+                    { state: "Jika x = 4,<br>2x + y = 11", kcs: ["KC-05"], options: ["2(4) + y = 11", "4 + y = 11", "8x + y = 11", "2(y) + 4 = 11"], correct: 0 },
+                    { state: "2(4) + y = 11", kcs: ["KC-02"], options: ["8 + y = 11", "6 + y = 11", "24 + y = 11", "11 + y = 8"], correct: 0 },
+                    { state: "8 + y = 11", kcs: ["KC-01"], options: ["y = 3", "y = 19", "y = -3", "y = 88"], correct: 0 }
+                ]
+            },
+            {
+                id: 306, steps: [
+                    { state: "3x + 2y = 12<br>x - 2y = 4<br>(Jumlahkan Kedua Pers.)", kcs: ["KC-06"], options: ["4x = 16", "2x = 16", "4y = 16", "3x = 16"], correct: 0 },
+                    { state: "4x = 16", kcs: ["KC-02"], options: ["x = 4", "x = 12", "x = 20", "x = 64"], correct: 0 },
+                    { state: "Jika x = 4,<br>x - 2y = 4", kcs: ["KC-05"], options: ["4 - 2y = 4", "4 + 2y = 4", "2y - 4 = 4", "x - 8 = 4"], correct: 0 },
+                    { state: "4 - 2y = 4", kcs: ["KC-01"], options: ["-2y = 0", "-2y = 8", "2y = 8", "-2y = 4"], correct: 0 },
+                    { state: "-2y = 0", kcs: ["KC-02"], options: ["y = 0", "y = -2", "y = 2", "y = 1"], correct: 0 }
+                ]
+            }
+        ];
+
+        let currentQuestion = null;
+        let currentStepIndex = 0;
+        let isProcessing = false;
+
+        // --- VARIABEL TRACKING BARU ---
+        let solvedQuestionIds = []; // Flagging soal yang sudah sukses
+        let stepHistory = []; // Menyimpan riwayat jawaban benar pada satu soal
+
+        function updateBKT(kcID, isCorrect) {
+            let kc = kcs[kcID];
+            let pL = kc.pL;
+            let pS = kc.pS;
+            let pG = kc.pG;
+            let pT = kc.pT;
+
+            if (isCorrect) {
+                kc.fluency = Math.min(kc.target + 2, kc.fluency + 1);
+            } else {
+                kc.fluency = Math.max(0, kc.fluency - 1);
+            }
+
+            let pL_obs;
+            if (isCorrect) {
+                pL_obs = (pL * (1 - pS)) / ((pL * (1 - pS)) + ((1 - pL) * pG));
+            } else {
+                pL_obs = (pL * pS) / ((pL * pS) + ((1 - pL) * (1 - pG)));
+            }
+
+            kc.pL = pL_obs + (1 - pL_obs) * pT;
+            if (kc.pL > 0.99) kc.pL = 0.99;
+            if (kc.pL < 0.01) kc.pL = 0.01;
+
+            if (kc.pL >= MASTERY_THRESHOLD && kc.fluency >= kc.target) {
+                kc.mastered = true;
+            } else if (kc.pL < 0.75 || kc.fluency < (kc.target - 2)) {
+                kc.mastered = false;
+            }
+        }
+
+        function selectNextQuestion() {
+            stepHistory = []; // Bersihkan riwayat setiap kali pindah soal
+            let targetKC = kcOrder.find(id => !kcs[id].mastered);
+
+            if (!targetKC) {
+                document.getElementById('stepIndicator').innerHTML = "SELESAI!";
+                document.getElementById('equationText').innerHTML = "🎉 SEMUA MASTER! 🎉";
+                document.getElementById('equationText').style.color = "#2ecc71";
+                document.getElementById('kcTags').innerHTML = "";
+                document.getElementById('historyContainer').classList.remove('active');
+                document.getElementById('mcqContainer').innerHTML = "";
+                document.getElementById('feedbackText').textContent = "Kamu sudah tamat dan lancar!";
+                document.getElementById('feedbackText').className = "feedback correct";
+                renderDashboard();
+                return;
+            }
+
+            let targetIndex = kcOrder.indexOf(targetKC);
+            let allowedKCs = kcOrder.slice(0, targetIndex + 1);
+
+            let availableQuestions = questionBank.filter(q => {
+                let questionKCs = new Set();
+                q.steps.forEach(step => step.kcs.forEach(kc => questionKCs.add(kc)));
+                let kcsArray = Array.from(questionKCs);
+
+                let isAllowedLevel = kcsArray.every(kc => allowedKCs.includes(kc));
+                let hasUnmasteredKC = kcsArray.some(kc => !kcs[kc].mastered);
+
+                return isAllowedLevel && hasUnmasteredKC;
+            });
+
+            // Filter soal yang belum dikerjakan (Flagging)
+            let unsolvedAvailable = availableQuestions.filter(q => !solvedQuestionIds.includes(q.id));
+
+            // Prioritaskan soal yang belum pernah dikerjakan
+            if (unsolvedAvailable.length > 0) {
+                availableQuestions = unsolvedAvailable;
+            }
+            // Jika semua soal di level ini sudah dikerjakan tapi anak belum master (jatuh lagi/lupa),
+            // maka kita gunakan ulang fallback soal yang pernah dikerjakan (availableQuestions utuh).
+            else if (availableQuestions.length === 0) {
+                // Fallback ekstra keras: Jika logika filter diatas mengosongkan array
+                availableQuestions = questionBank.filter(q => {
+                    let questionKCs = new Set();
+                    q.steps.forEach(step => step.kcs.forEach(kc => questionKCs.add(kc)));
+                    return Array.from(questionKCs).every(kc => allowedKCs.includes(kc));
+                });
+            }
+
+            let randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            currentQuestion = availableQuestions[randomIndex];
+            currentStepIndex = 0;
+
+            // Masukkan soal awal ke History
+            stepHistory.push(currentQuestion.steps[0].state);
+            renderStep();
+        }
+
+        // Render History Penyelesaian
+        function renderHistory(isCompleted = false) {
+            let hc = document.getElementById('historyContainer');
+            // Hanya tampilkan history jika sudah menjawab minimal 1 step, ATAU sudah komplit
+            if (stepHistory.length > 1 || isCompleted) {
+                hc.classList.add('active');
+                hc.innerHTML = stepHistory.map((h, idx) => {
+                    if (idx === 0) return `<div class="history-item" style="background:#e8f4f8">${h}</div>`;
+                    let isLast = idx === stepHistory.length - 1;
+                    let bg = (isCompleted && isLast) ? 'background:#d4edda; font-weight:bold; border-color:#2ecc71;' : '';
+                    return `<div class="history-arrow">↓</div><div class="history-item" style="${bg}">${h}</div>`;
+                }).join('');
+            } else {
+                hc.classList.remove('active');
+                hc.innerHTML = '';
+            }
+        }
+
+        function renderStep() {
+            isProcessing = false;
+            let step = currentQuestion.steps[currentStepIndex];
+
+            let maxKCOrderInQuestion = -1;
+            step.kcs.forEach(kc => {
+                let idx = kcOrder.indexOf(kc);
+                if (idx > maxKCOrderInQuestion) maxKCOrderInQuestion = idx;
+            });
+            let currentLevelVisual = maxKCOrderInQuestion <= 1 ? "Dasar" : (maxKCOrderInQuestion <= 3 ? "Menengah" : "Lanjutan");
+
+            document.getElementById('stepIndicator').innerText = `Level ${currentLevelVisual} | Langkah ${currentStepIndex + 1} dari ${currentQuestion.steps.length}`;
+            document.getElementById('equationText').innerHTML = step.state;
+            document.getElementById('equationText').style.display = "flex"; // Pastikan tampil jika sebelumnya disembunyikan
+
+            renderHistory(false); // Update baris history
+
+            let tagsHTML = step.kcs.map(kc => `<span class="kc-badge">${kc}</span>`).join('');
+            document.getElementById('kcTags').innerHTML = tagsHTML;
+
+            let mcqContainer = document.getElementById('mcqContainer');
+            mcqContainer.innerHTML = '';
+
+            let optionsWithIndex = step.options.map((opt, i) => ({ text: opt, originalIndex: i }));
+            optionsWithIndex.sort(() => Math.random() - 0.5);
+
+            optionsWithIndex.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = 'mcq-btn';
+                btn.innerHTML = opt.text;
+                btn.onclick = () => handleAnswer(opt.originalIndex, btn);
+                mcqContainer.appendChild(btn);
+            });
+
+            document.getElementById('feedbackText').textContent = "";
+            renderDashboard();
+        }
+
+        function handleAnswer(selectedIndex, clickedBtn) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            let step = currentQuestion.steps[currentStepIndex];
+            let isCorrect = (selectedIndex === step.correct);
+            let fb = document.getElementById('feedbackText');
+
+            let allBtns = document.querySelectorAll('.mcq-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            step.kcs.forEach(kcID => { updateBKT(kcID, isCorrect); });
+
+            if (isCorrect) {
+                clickedBtn.classList.add('correct-choice');
+
+                // Tambahkan jawaban yang benar ke dalam History
+                stepHistory.push(step.options[step.correct]);
+
+                // Mengecek apakah ini adalah langkah terakhir pada soal
+                if (currentStepIndex === currentQuestion.steps.length - 1) {
+                    // Masukkan ke log Flagging (Soal Selesai)
+                    if (!solvedQuestionIds.includes(currentQuestion.id)) {
+                        solvedQuestionIds.push(currentQuestion.id);
+                    }
+
+                    fb.textContent = "Soal Selesai! Berikut adalah langkah penyelesaian lengkapnya.";
+                    fb.className = "feedback correct";
+
+                    // Render riwayat final dengan gaya khusus
+                    renderHistory(true);
+
+                    // Sembunyikan layar soal dan ganti dengan pesan sukses
+                    document.getElementById('equationText').innerHTML = "Jawaban Akhir Ditemukan! 🎯";
+                    document.getElementById('equationText').style.color = "#2ecc71";
+
+                    // Jeda waktu lebih lama agar siswa dapat membaca alur (3.5 detik)
+                    setTimeout(() => {
+                        document.getElementById('equationText').style.color = "var(--text-main)";
+                        selectNextQuestion();
+                    }, 3500);
+
+                } else {
+                    fb.textContent = "Langkah Benar! Melanjutkan...";
+                    fb.className = "feedback correct";
+
+                    // Jeda lebih cepat antar langkah
+                    setTimeout(() => {
+                        currentStepIndex++;
+                        renderStep();
+                    }, 1200);
+                }
+
+            } else {
+                clickedBtn.classList.add('wrong-choice');
+                fb.textContent = "Langkah Kurang Tepat. Memperbaiki dan melanjutkan...";
+                fb.className = "feedback incorrect";
+
+                // Tunjukkan jawaban benar secara visual
+                allBtns.forEach(b => {
+                    let btnIndex = step.options.indexOf(b.innerHTML);
+                    if (btnIndex === step.correct) {
+                        b.classList.add('correct-choice');
+                    }
+                });
+
+                // Setelah dijawab salah, paksa untuk lanjut ke langkah berikutnya dengan jawaban yang disuapi (Scaffolding Support)
+                setTimeout(() => {
+                    stepHistory.push(step.options[step.correct]); // Tetap catat langkah benarnya
+
+                    if (currentStepIndex === currentQuestion.steps.length - 1) {
+                        renderHistory(true);
+                        document.getElementById('equationText').innerHTML = "Penyelesaian Selesai dengan Koreksi.";
+                        setTimeout(() => { selectNextQuestion(); }, 3500);
+                    } else {
+                        currentStepIndex++;
+                        renderStep();
+                    }
+                }, 2000);
+            }
+
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            let dash = document.getElementById('masteryList');
+            dash.innerHTML = '';
+
+            for (let key in kcs) {
+                let kc = kcs[key];
+                let percent = (kc.pL * 100).toFixed(0);
+
+                let barColor = kc.mastered ? '#2ecc71' : '#3498db';
+                let icon = kc.mastered ? '✅' : '🔒';
+
+                let gearsHTML = '';
+                for (let i = 0; i < kc.target; i++) {
+                    if (i < kc.fluency) {
+                        gearsHTML += '<span class="gear-active">⚙️</span>';
+                    } else {
+                        gearsHTML += '<span class="gear-inactive">⚙️</span>';
+                    }
+                }
+
+                let fractionColor;
+                if (kc.fluency > kc.target) {
+                    fractionColor = '#9b59b6';
+                } else if (kc.fluency === kc.target) {
+                    fractionColor = '#f39c12';
+                } else {
+                    fractionColor = '#95a5a6';
+                }
+
+                dash.innerHTML += `
+                <div class="kc-item">
+                    <div class="kc-name" title="${kc.name}">${key}</div>
+                    <div class="kc-metrics">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percent}%; background-color: ${barColor}"></div>
+                        </div>
+                        <div class="fluency-track">
+                            ${gearsHTML} 
+                            <span class="fluency-text" style="color: ${fractionColor};">(${kc.fluency}/${kc.target})</span>
+                            <span class="pl-text">P(L): ${percent}%</span>
+                        </div>
+                    </div>
+                    <div class="kc-status">${icon}</div>
+                </div>`;
+            }
+        }
+
+        selectNextQuestion();
+    </script>
+</body>
+
+</html>
